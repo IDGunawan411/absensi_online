@@ -1,28 +1,157 @@
-<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
-<script type="text/javascript">
-if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function (p) {
-        var LatLng = new google.maps.LatLng(p.coords.latitude, p.coords.longitude);
-        var mapOptions = {
-            center: LatLng,
-            zoom: 13,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-        };
-        var map = new google.maps.Map(document.getElementById("dvMap"), mapOptions);
-        var marker = new google.maps.Marker({
-            position: LatLng,
-            map: map,
-            title: "<div style = 'height:60px;width:200px'><b>Your location:</b><br />Latitude: " + p.coords.latitude + "<br />Longitude: " + p.coords.longitude
-        });
-        google.maps.event.addListener(marker, "click", function (e) {
-            var infoWindow = new google.maps.InfoWindow();
-            infoWindow.setContent(marker.title);
-            infoWindow.open(map, marker);
-        });
-    });
-} else {
-    alert('Geo Location feature is not supported in this browser.');
+<!DOCTYPE html>
+<html>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly" defer ></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<style>
+/**
+ * @license
+ * Copyright 2019 Google LLC. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/* 
+ * Always set the map height explicitly to define the size of the div element
+ * that contains the map. 
+ */
+ #map {
+  height: 50%;
 }
+
+/* 
+ * Optional: Makes the sample page fill the window. 
+ */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
+</style>
+<body>
+<p>Click the button to get your coordinates.</p>
+
+<button onclick="getLocation()">Try It</button>
+
+<p id="demo"></p>
+<div id="map"></div>
+<div id="loading">loading bos..</div>
+<br>
+<div> 
+    Your Location : <a id="map_loaction"></a><br>
+    Long : <a id="map_long"></a><br>
+    Lat : <a id="map_lat"></a><br>
+    Ip  : <a id="ip_address"></a>
+
+<div>
+
+<script>
+const x = document.getElementById("demo");
+
+
+let map, infoWindow;
+
+function initMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
+        //-6.2244507,106.8253633
+        center: { lat: -6.2244507, lng: 106.8253633 },
+        zoom: 10,
+    });
+    infoWindow = new google.maps.InfoWindow();
+}
+
+function getLocation() {
+    $("#map").hide();
+    $("#loading").show();
+
+  // Try HTML5 geolocation.
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const pos = {
+                    // lat: -6.2245188,
+                    // lng: 106.82584,
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+
+                // Call the function to get the address and set it to infoWindow
+                getAddressFromGeolocation(pos.lat, pos.lng, infoWindow);
+
+                $("#map_long").text(pos.lng);
+                $("#map_lat").text(pos.lat);
+
+                fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    $("#ip_address").text(data.ip);
+                })
+                .catch(error => {
+                    console.error('Error fetching IP address:', error);
+                });
+                infoWindow.setPosition(pos);
+                infoWindow.open(map);
+                map.setCenter(pos);
+                map.setZoom(15);
+
+                $("#map").show();
+                $("#loading").hide();
+            },() => {
+                handleLocationError(true, infoWindow, map.getCenter());
+            }
+        );
+    } else {
+        // Browser doesn't support Geolocation
+        handleLocationError(false, infoWindow, map.getCenter());
+    }
+}
+
+
+// Assuming you have a map and an infoWindow already initialized
+
+// Function to get the address from geolocation
+function getAddressFromGeolocation(lat, lng, infoWindow) {
+  // Create a Geocoder object
+  var geocoder = new google.maps.Geocoder();
+
+  // Create a LatLng object
+  var latLng = new google.maps.LatLng(lat, lng);
+
+  // Use geocoder to get address from latLng
+  geocoder.geocode({'location': latLng}, function(results, status) {
+    if (status === 'OK') {
+      if (results[0]) {
+        // Set the content of infoWindow with the address
+        infoWindow.setContent(results[0].formatted_address);
+        
+        $("#map_loaction").text(results[0].formatted_address);
+
+      } else {
+        window.alert('No results found');
+      }
+    } else {
+      window.alert('Geocoder failed due to: ' + status);
+    }
+  });
+}
+
+
+function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+infoWindow.setPosition(pos);
+infoWindow.setContent(
+    browserHasGeolocation
+    ? "Error: The Geolocation service failed."
+    : "Error: Your browser doesn't support geolocation."
+);
+infoWindow.open(map);
+}
+
+window.initMap = initMap;
+
 </script>
-<div id="dvMap" style="width: 500px; height: 500px">
-</div>
+
+</body>
+</html>
+
