@@ -1,158 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <!--https://developers.google.com/maps/documentation/javascript/tutorial?hl=zh-tw#HelloWorld-->
+    <meta charset="UTF-8">
+    <title>Google Map</title>
+     <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #location-map { height: 300px; }
+    </style>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false&language=zh-TW"></script>
+</head>
+<body onload="initialize()">
+<div id="location-map"></div>
+<script type="text/javascript">
+   var myMap;
+    var geocoder = new google.maps.Geocoder();
+    var infowindow = new google.maps.InfoWindow();
+    var marker;
+    var addr_comps = new Array();
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly" defer ></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    function initialize() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                mapServiceProvider(position.coords.latitude, position.coords.longitude);
+            },errorHandler);
+        } else {
+            console.log('瀏覽器不支援 HTML5 定位');
+            // notify('瀏覽器不支援 HTML5 定位, 請手動設定地址！', 'error');
+        }
+    }//end initialize
 
-<style>
-/**
- * @license
- * Copyright 2019 Google LLC. All Rights Reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
-/* 
- * Always set the map height explicitly to define the size of the div element
- * that contains the map. 
- */
- #map {
-  height: 50%;
-}
+    function errorHandler(error) {
+        switch (error.code) {
+            case error.TIMEOUT:
+                console.log('連線逾時');
+                // notify('連線逾時, 請重試！', 'error');
+                break;
+            case error.POSITION_UNAVAILABLE:
+                console.log('無法取得定位！');
+                // notify('無法取得定位！', 'error');
+                break;
+            case error.PERMISSION_DENIED://拒絕
+                console.log('請開啓手機的GPS定位功能！');
+                // notify('請開啓手機的GPS定位功能！', 'error');
+                break;
+            case error.UNKNOWN_ERROR:
+                console.log('不明的錯誤，請稍候再試');
+                // notify('不明的錯誤，請稍候再試！', 'error');
+                break;
+        }
+    }//end errorHandler
 
-/* 
- * Optional: Makes the sample page fill the window. 
- */
-html,
-body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-
-</style>
-<body>
-<h1>HTML Geolocation</h1>
-<p>Click the button to get your coordinates.</p>
-
-<button onclick="getLocation()">Try It</button>
-
-<p id="demo"></p>
-<div id="map"></div>
-<div id="loading">loading bos..</div>
-<br>
-<div> 
-    Your Location : <a id="map_loaction"></a><br>
-    Long : <a id="map_long"></a><br>
-    Lat : <a id="map_lat"></a><br>
-    Ip  : <a id="ip_address"></a>
-
-<div>
-
-<script>
-const x = document.getElementById("demo");
-
-
-let map, infoWindow;
-
-function initMap() {
-    map = new google.maps.Map(document.getElementById("map"), {
-        //-6.2244507,106.8253633
-        center: { lat: -6.2244507, lng: 106.8253633 },
-        zoom: 10,
-    });
-    infoWindow = new google.maps.InfoWindow();
-}
-
-function getLocation() {
-    $("#map").hide();
-    $("#loading").show();
-
-  // Try HTML5 geolocation.
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const pos = {
-                    // lat: -6.2245188,
-                    // lng: 106.82584,
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                };
-
-                // Call the function to get the address and set it to infoWindow
-                getAddressFromGeolocation(pos.lat, pos.lng, infoWindow);
-
-                $("#map_long").text(pos.lng);
-                $("#map_lat").text(pos.lat);
-
-                fetch('https://api.ipify.org?format=json')
-                .then(response => response.json())
-                .then(data => {
-                    $("#ip_address").text(data.ip);
-                })
-                .catch(error => {
-                    console.error('Error fetching IP address:', error);
-                });
-                infoWindow.setPosition(pos);
-                infoWindow.open(map);
-                map.setCenter(pos);
-                map.setZoom(15);
-
-                $("#map").show();
-                $("#loading").hide();
-            },() => {
-                handleLocationError(true, infoWindow, map.getCenter());
+    //reverse geocoding
+    function codeLatLng(latlng) {
+        // reportLocation.reset();
+         geocoder.geocode({'latLng': latlng},function(results, status){
+            if (status == google.maps.GeocoderStatus.OK) {
+              if (results[0]) {
+                addr_comps = results[0].address_components;
+                var content = "<div id='content' class='report-address-info-window'>" + results[0].formatted_address + "</div>"
+                infowindow.setContent(content);
+                infowindow.open(myMap, marker);
+                $('input#location').val(results[0].formatted_address);
+              } else {
+                console.log("codeLatLng fail, no result found");
+                notify("無法取得地址, 請手動設定地址！", "error");
+              }
+            } else {
+              console.log("codeLatLng failed due to: " + status);
+              notify("無法取得地址, 請手動設定地址！", "error");
             }
-        );
-    } else {
-        // Browser doesn't support Geolocation
-        handleLocationError(false, infoWindow, map.getCenter());
-    }
-}
+         });
+    }//end codeLatLng
 
+    function mapServiceProvider(lat, lng) {   
+        var latlng = new google.maps.LatLng(lat, lng);
+            
+        var mapOptions = {  
+            zoom: 12,  
+            center: latlng,  
+            mapTypeControl: false,
+            mapTypeId: google.maps.MapTypeId.ROADMAP  
+        }; 
+            
+        myMap = new google.maps.Map(document.getElementById("location-map"), mapOptions); 
+        marker = new google.maps.Marker({  
+            position: latlng,  
+            map: myMap,
+            draggable:true,
+        });
 
-// Assuming you have a map and an infoWindow already initialized
-
-// Function to get the address from geolocation
-function getAddressFromGeolocation(lat, lng, infoWindow) {
-  // Create a Geocoder object
-  var geocoder = new google.maps.Geocoder();
-
-  // Create a LatLng object
-  var latLng = new google.maps.LatLng(lat, lng);
-
-  // Use geocoder to get address from latLng
-  geocoder.geocode({'location': latLng}, function(results, status) {
-    if (status === 'OK') {
-      if (results[0]) {
-        // Set the content of infoWindow with the address
-        infoWindow.setContent(results[0].formatted_address);
+        myMap.setZoom(18);
+        myMap.setCenter(marker.getPosition());
+        codeLatLng(latlng);
         
-        $("#map_loaction").text(results[0].formatted_address);
-
-      } else {
-        window.alert('No results found');
-      }
-    } else {
-      window.alert('Geocoder failed due to: ' + status);
-    }
-  });
-}
-
-
-function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-infoWindow.setPosition(pos);
-infoWindow.setContent(
-    browserHasGeolocation
-    ? "Error: The Geolocation service failed."
-    : "Error: Your browser doesn't support geolocation."
-);
-infoWindow.open(map);
-}
-
-window.initMap = initMap;
-
+        google.maps.event.addListener(marker, 'dragend', function() {
+          var point = marker.getPosition();
+          myMap.panTo(point);
+          codeLatLng(point);
+        });
+      }//end mapServiceProvider
 </script>
-
 </body>
 </html>
-
