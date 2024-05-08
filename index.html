@@ -9,6 +9,7 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <!-- Panggil jQuery dari CDN -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
 <style>
     /* Style untuk container peta */
     #map {
@@ -26,6 +27,10 @@
     <button id="btn_location" onclick="cek_lokasi_anda()">Cek Lokasi Anda</button>
 </div>
 <br>
+
+<div>
+    <p><b>Location Value</b></p>
+</div>
 <div>
     <label for="longitude">Longitude:</label>
     <span id="longitude"></span>
@@ -40,6 +45,23 @@
 </div>
 
 
+<div>
+    <p><b>Encripted AES Location Value</b></p>
+</div>
+
+<div>
+    <label for="longitude">Longitude:</label>
+    <span id="enc_longitude"></span>
+</div>
+<div>
+    <label for="latitude">Latitude:</label>
+    <span id="enc_latitude"></span>
+</div>
+<div>
+    <label for="address">Address:</label>
+    <span id="enc_address"></span>
+</div>
+
 <script>
 // Inisialisasi peta menggunakan Leaflet
 var map = L.map('map').setView([0, 0], 2);
@@ -53,10 +75,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 function addMarker(latitude, longitude) {
     L.marker([latitude, longitude]).addTo(map);
 }
-
-
-
-
 
 
 // Fungsi untuk mendapatkan lokasi saat ini
@@ -75,6 +93,9 @@ function getCurrentLocation() {
             // Set nilai Longitude, Latitude, dan Address menggunakan jQuery
             $("#longitude").text(longitude);
             $("#latitude").text(latitude);
+
+            encrypt(longitude,"enc_longitude");
+            encrypt(latitude,"enc_latitude");
 
             // Dapatkan alamat menggunakan fungsi getAddress
             getAddress(latitude, longitude);
@@ -110,12 +131,33 @@ function getAddress(latitude, longitude) {
             // Dapatkan alamat dari data dan set nilai input Address menggunakan jQuery
             var address = data.display_name;
             $("#address").text(address);
+            encrypt(latitude,"enc_address");
         },
         error: function(xhr, status, error) {
             // Tampilkan pesan kesalahan jika terjadi masalah
             console.error("Gagal mendapatkan alamat: " + error);
         }
     });
+}
+
+// Fungsi untuk melakukan enkripsi menggunakan AES
+function encrypt(string,id_sting) {
+    var plaintext = string.toString();
+    var key = CryptoJS.enc.Utf8.parse('0123456789abcdef0123456789abcdef'); // Contoh kunci enkripsi (harus 32 karakter)
+    var iv = CryptoJS.enc.Utf8.parse('1234567890abcdef'); // Contoh inisialisasi vektor (harus 16 karakter)
+
+    var encrypted = CryptoJS.AES.encrypt(plaintext, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+    $("#"+id_sting).text(encrypted.toString());
+}
+
+// Fungsi untuk melakukan dekripsi menggunakan AES
+function decrypt() {
+    var ciphertext = document.getElementById("ciphertext").value;
+    var key = CryptoJS.enc.Utf8.parse('0123456789abcdef0123456789abcdef'); // Contoh kunci enkripsi (harus 32 karakter)
+    var iv = CryptoJS.enc.Utf8.parse('1234567890abcdef'); // Contoh inisialisasi vektor (harus 16 karakter)
+
+    var decrypted = CryptoJS.AES.decrypt(ciphertext, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+    document.getElementById("plaintext").value = decrypted.toString(CryptoJS.enc.Utf8);
 }
 </script>
 </body>
