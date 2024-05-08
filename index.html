@@ -151,7 +151,7 @@ function getAddress(latitude, longitude) {
             // Dapatkan alamat dari data dan set nilai input Address menggunakan jQuery
             var address = data.display_name;
             $("#address").text(address);
-            encrypt(latitude,"enc_address");
+            encrypt(address,"enc_address");
         },
         error: function(xhr, status, error) {
             // Tampilkan pesan kesalahan jika terjadi masalah
