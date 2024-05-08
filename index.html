@@ -21,6 +21,11 @@
 <div id="map"></div>
 
 <!-- Komponen HTML untuk menampilkan Longitude, Latitude, dan Alamat -->
+<br>
+<div>
+    <button id="btn_location" onclick="cek_lokasi_anda()">Cek Lokasi Anda</button>
+</div>
+<br>
 <div>
     <label for="longitude">Longitude:</label>
     <span id="longitude"></span>
@@ -33,6 +38,7 @@
     <label for="address">Address:</label>
     <span id="address"></span>
 </div>
+
 
 <script>
 // Inisialisasi peta menggunakan Leaflet
@@ -47,6 +53,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 function addMarker(latitude, longitude) {
     L.marker([latitude, longitude]).addTo(map);
 }
+
+
+
+
+
 
 // Fungsi untuk mendapatkan lokasi saat ini
 function getCurrentLocation() {
@@ -80,8 +91,11 @@ function getCurrentLocation() {
     }
 }
 
-// Panggil fungsi untuk mendapatkan lokasi saat ini
-getCurrentLocation();
+function cek_lokasi_anda(){
+    // Panggil fungsi untuk mendapatkan lokasi saat ini
+    getCurrentLocation();
+
+}
 
 // Fungsi untuk mendapatkan alamat dari latitude dan longitude
 function getAddress(latitude, longitude) {
