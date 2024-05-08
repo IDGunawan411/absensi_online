@@ -104,8 +104,8 @@ function getCurrentLocation() {
 
             // Tambahkan marker ke lokasi saat ini pada peta
             addMarker(latitude, longitude);
-            addMarker(-6.265657, 106.978953);
-            addMarker(-6.252817, 107.039850);
+            // addMarker(-6.265657, 106.978953);
+            // addMarker(-6.252817, 107.039850);
 
 
             // Set nilai Longitude, Latitude, dan Address menggunakan jQuery
@@ -119,7 +119,7 @@ function getCurrentLocation() {
             getAddress(latitude, longitude);
             
             // Posisikan peta pada lokasi saat ini
-            map.setView([latitude, longitude], 12);
+            map.setView([latitude, longitude], 15);
 
 
         }, function(error) {
