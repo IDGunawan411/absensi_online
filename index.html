@@ -46,6 +46,10 @@
     <p><b>Location Value</b></p>
 </div>
 <div>
+    <label for="ip_address">IP :</label>
+    <span id="ip_address"></span>
+</div>
+<div>
     <label for="longitude">Longitude :</label>
     <span id="longitude"></span>
 </div>
@@ -63,6 +67,10 @@
     <p><b>Encripted AES Location Value</b></p>
 </div>
 
+<div>
+    <label for="enc_ip_address">IP :</label>
+    <span id="enc_ip_address"></span>
+</div>
 <div>
     <label for="longitude">Longitude:</label>
     <span id="enc_longitude"></span>
@@ -117,6 +125,7 @@ function getCurrentLocation() {
 
             // Dapatkan alamat menggunakan fungsi getAddress
             getAddress(latitude, longitude);
+            getIPAddress();
             
             // Posisikan peta pada lokasi saat ini
             map.setView([latitude, longitude], 15);
@@ -178,6 +187,19 @@ function decrypt(string,id_string) {
 
     var decrypted = CryptoJS.AES.decrypt(ciphertext, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
     $("#"+id_sting).text(decrypted.toString(CryptoJS.enc.Utf8));
+}
+
+// Fungsi untuk mendapatkan alamat IP menggunakan fetch API
+function getIPAddress() {
+    fetch('https://api.ipify.org?format=json')
+    .then(response => response.json())
+    .then(data => {
+        const ipAddress = data.ip;
+        // Menetapkan alamat IP ke elemen HTML menggunakan jQuery
+        encrypt(ipAddress.toString(),"enc_ip_address");
+        $('#ip_address').text(ipAddress);
+    })
+    .catch(error => console.error('Error:', error));
 }
 </script>
 </body>
